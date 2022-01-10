@@ -1,3 +1,16 @@
+#include <MIDI.h>
+
+#ifdef USE_TINYUSB
+#include <Adafruit_TinyUSB.h>
+#endif
+
+MIDI_CREATE_DEFAULT_INSTANCE();
+
+int notes[] = {69, 72, 74, 76, 72, 81, 79};  // melody notes
+int vels[] = {127, 96, 64, 96, 32, 127, 64};  // velocity per note
+int rests[] = {50, 50, 50, 50, 50, 200, 50};  // rests between notes
+int note_mods[] = {0, 0, 0, 0, 3, 3, 3, 3, 0, 0, 0, 0, 5, 5, 3, 3};  // modifies notes for progression
+
 /*********************************************************************
  This is an example for our nRF51822 based Bluefruit LE modules
 
@@ -56,10 +69,11 @@ void error(const __FlashStringHelper*err) {
 }
 
 /* The service information */
+int32_t midiServiceId;
+int32_t midiChanCharId;
+int32_t midiNoteCharId;
+int32_t midiVelCharId;
 
-int32_t hrmServiceId;
-int32_t hrmMeasureCharId;
-int32_t hrmLocationCharId;
 /**************************************************************************/
 /*!
     @brief  Sets up the HW an the BLE module (this function is called
@@ -70,25 +84,19 @@ void setup(void)
 {
   while (!Serial); // required for Flora & Micro
   delay(500);
-
+  MIDI.begin(MIDI_CHANNEL_OMNI);
   boolean success;
 
   Serial.begin(115200);
-  Serial.println(F("Adafruit Bluefruit Heart Rate Monitor (HRM) Example"));
-  Serial.println(F("---------------------------------------------------"));
-
   randomSeed(micros());
 
   /* Initialise the module */
   Serial.print(F("Initialising the Bluefruit LE module: "));
-
   if ( !ble.begin(VERBOSE_MODE) )
   {
     error(F("Couldn't find Bluefruit, make sure it's in CoMmanD mode & check wiring?"));
   }
   Serial.println( F("OK!") );
-
-  /* Perform a factory reset to make sure everything is in a known state */
   Serial.println(F("Performing a factory reset: "));
   if (! ble.factoryReset() ){
        error(F("Couldn't factory reset"));
@@ -96,49 +104,41 @@ void setup(void)
 
   /* Disable command echo from Bluefruit */
   ble.echo(false);
-
   Serial.println("Requesting Bluefruit info:");
-  /* Print Bluefruit information */
   ble.info();
 
-  // this line is particularly required for Flora, but is a good idea
-  // anyways for the super long lines ahead!
-  // ble.setInterCharWriteDelay(5); // 5 ms
-
   /* Change the device name to make it easier to find */
-  Serial.println(F("Setting device name to 'TEST': "));
+  Serial.println(F("Setting device name to 'MIDIPlex': "));
 
-  if (! ble.sendCommandCheckOK(F("AT+GAPDEVNAME=TEST")) ) {
+  if (! ble.sendCommandCheckOK(F("AT+GAPDEVNAME=MIDIPlex")) ) {
     error(F("Could not set device name?"));
   }
 
   /* Add the Heart Rate Service definition */
   /* Service ID should be 1 */
-  Serial.println(F("Adding the Heart Rate Service definition (UUID = 0x180D): "));
-  success = ble.sendCommandWithIntReply( F("AT+GATTADDSERVICE=UUID=0x180D"), &hrmServiceId);
+  Serial.println(F("Adding the MIDI Service definition (UUID = 0x180D): "));
+  success = ble.sendCommandWithIntReply( F("AT+GATTADDSERVICE=UUID=0x180D"), &midiServiceId);
   if (! success) {
     error(F("Could not add HRM service"));
   }
 
-  /* Add the Heart Rate Measurement characteristic */
+  /* Add Characteristics */
   /* Chars ID for Measurement should be 1 */
-  Serial.println(F("Adding the Heart Rate Measurement characteristic (UUID = 0x2A37): "));
-  success = ble.sendCommandWithIntReply( F("AT+GATTADDCHAR=UUID=0x2A37, PROPERTIES=0x10, MIN_LEN=2, MAX_LEN=3, VALUE=00-40"), &hrmMeasureCharId);
-    if (! success) {
-    error(F("Could not add HRM characteristic"));
-  }
-
-  /* Add the Body Sensor Location characteristic */
-  /* Chars ID for Body should be 2 */
-  Serial.println(F("Adding the Body Sensor Location characteristic (UUID = 0x2A38): "));
-  success = ble.sendCommandWithIntReply( F("AT+GATTADDCHAR=UUID=0x2A38, PROPERTIES=0x02, MIN_LEN=1, VALUE=3"), &hrmLocationCharId);
-    if (! success) {
-    error(F("Could not add BSL characteristic"));
-  }
+  // Midi Chan
+//  Serial.println(F("Adding the MIDI Note characteristic (UUID = 0x2A37): "));
+//  success = ble.sendCommandWithIntReply(F("AT+GATTADDCHAR=UUID=0x0001, PROPERTIES=0x04, MIN_LEN=1, MAX_LEN=1, VALUE=00-00"), &midiChanCharId);
+//  if (! success) {error(F("Could not add midiChan characteristic"));}
+//  // Midi Note
+//  success = ble.sendCommandWithIntReply(F("AT+GATTADDCHAR=UUID=0x0002, PROPERTIES=0x04, MIN_LEN=1, MAX_LEN=1, VALUE=00-00"), &midiChanCharId);
+//  if (! success) {error(F("Could not add midiChan characteristic"));}
+//    // Midi Vel
+//  success = ble.sendCommandWithIntReply(F("AT+GATTADDCHAR=UUID=0x0003, PROPERTIES=0x04, MIN_LEN=1, MAX_LEN=1, VALUE=00-00"), &midiVelCharId);
+//  if (! success) {error(F("Could not add midiChan characteristic"));}
+  
 
   /* Add the Heart Rate Service to the advertising data (needed for Nordic apps to detect the service) */
-  Serial.print(F("Adding Heart Rate Service UUID to the advertising payload: "));
-  ble.sendCommandCheckOK( F("AT+GAPSETADVDATA=02-01-06-05-02-0d-18-0a-18") );
+//  Serial.print(F("Adding Heart Rate Service UUID to the advertising payload: "));
+//  ble.sendCommandCheckOK( F("AT+GAPSETADVDATA=02-01-06-05-02-0d-18-0a-18") );
 
   /* Reset the device for the new service setting changes to take effect */
   Serial.print(F("Performing a SW reset (service changes require a reset): "));
@@ -150,18 +150,25 @@ void setup(void)
 /** Send randomized heart rate data continuously **/
 void loop(void)
 {
-  int heart_rate = random(50, 100);
-
-  Serial.print(F("Updating HRM value to "));
-  Serial.print(heart_rate);
-  Serial.println(F(" BPM"));
+  // int heart_rate = random(50, 100);
+  // Serial.print(F("Updating HRM value to "));
+  // Serial.print(heart_rate);
+  // Serial.println(F(" BPM"));
 
   /* Command is sent when \n (\r) or println is called */
   /* AT+GATTCHAR=CharacteristicID,value */
-  ble.print( F("AT+GATTCHAR=") );
-  ble.print( hrmMeasureCharId );
-  ble.print( F(",00-") );
-  ble.println(heart_rate, HEX);
+  // ble.print( F("AT+GATTCHAR=") );
+  // ble.print( hrmMeasureCharId );
+  // ble.print( F(",00-") );
+  // ble.println(heart_rate, HEX);
+  for(int j=0; j<16; j++){  // loop through four measures for progression
+    for(int i=0; i<7; i++){ //
+      MIDI.sendNoteOn(notes[i]+note_mods[j], vels[i], 1);
+      delay(100);
+      MIDI.sendNoteOff(notes[i]+note_mods[j], 0, 1);
+      delay(rests[i]);
+    }
+  }
 
   /* Check if command executed OK */
   if ( !ble.waitForOK() )
