@@ -98,7 +98,6 @@ MIDI_CREATE_DEFAULT_INSTANCE();
 /**************************************************************************/
 void setup(void)
 {
-  while (!Serial);  // required for Flora & Micro
   delay(500);
   MIDI.begin(MIDI_CHANNEL_OMNI);
 
@@ -133,54 +132,6 @@ void setup(void)
   }
 }
 
-int parseMsg(int *vals, char* msg){
-  char* token = strtok(msg, "-");
-  int count =0;
-  while( token != NULL && count <=2) {
-    Serial.println(token);
-    vals[count] = strtol(token, NULL, 10);
-    Serial.println(String(vals[count]));
-    count = count + 1;
-    token = strtok(NULL, "-");
-  }
-}
-
-int parseMessages(int *vals, char* buff){
-  char* token = strtok(buff, "|");
-  int count = 0;
-  while(token != NULL){
-    parseMsg(vals[count*3], token);
-    token = strtok(NULL, "|");
-    count = count + 1;
-  }
-  return count;
-}
-
-
-void fn(byte *vals[], char input[]){
-  int msgCount = 0;
-  char* commandEnd;
-  char* command = strtok_r(input, "|", &commandEnd);
-  while (command != NULL){
-    Serial.print(command);
-    Serial.print("  msgCount");
-    Serial.println(msgCount);
-    int valCount = 0;
-    char* tokenEnd;
-    char* token = strtok_r(command, "-", &tokenEnd);
-    while(token != NULL && valCount <3){
-      vals[msgCount*3+valCount] = atoi(token);
-      Serial.print(token);
-      Serial.print(" => ");
-      Serial.println(*(vals[msgCount*3+valCount]));
-      token = strtok_r(NULL, "-", &tokenEnd);
-      valCount = valCount+1;
-    }
-    command = strtok_r(NULL, "|", &commandEnd);
-    msgCount = msgCount+1;
-   }
-}
-
 
 /**************************************************************************/
 /*!
@@ -192,20 +143,6 @@ void loop(void)
   // Check for user input
   char inputs[BUFSIZE+1];
 
-//  if ( getUserInput(inputs, BUFSIZE) )
-//  {
-//    // Send characters to Bluefruit
-//    Serial.print("[Send] ");
-//    Serial.println(inputs);
-//
-//    ble.print("AT+BLEUARTTX=");
-//    ble.println(inputs);
-//
-//    // check response stastus
-//    if (! ble.waitForOK() ) {
-//      Serial.println(F("Failed to send?"));
-//    }
-//  }
 
   // Check for incoming characters from Bluefruit
   ble.println("AT+BLEUARTRX");
@@ -265,7 +202,7 @@ bool getUserInput(char buffer[], uint8_t maxSize)
   TimeoutTimer timeout(100);
 
   memset(buffer, 0, maxSize);
-  while( (!Serial.available()) && !timeout.expired() ) { delay(1); }
+  // while( (!Serial.available()) && !timeout.expired() ) { delay(1); }
 
   if ( timeout.expired() ) return false;
 

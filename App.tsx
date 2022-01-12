@@ -18,16 +18,13 @@ import {
   StyleSheet,
   ScrollView,
 } from 'react-native';
-import {Characteristic} from 'react-native-ble-plx';
-
 import {
   scanAndConnect,
   requestLocationPermission,
   manager,
   sendMidiNote,
 } from './src/ble';
-
-// import {Colors} from 'react-native/Libraries/NewAppScreen';
+import {useMidiBleClient} from './src/hooks/useMidiClient';
 
 const connect = () => {
   return new Promise((res, rej) => {
@@ -43,69 +40,30 @@ const connect = () => {
   });
 };
 
+const midiChannel = 2;
 const App = () => {
-  const [device, setDevice] = useState(null);
-  const [characteristic, setCharacteristic] = useState(null);
-  const [number, onChangeNumber] = React.useState(null);
-  const connectFn = () => {
-    connect().then(({device, characteristic}) => {
-      setDevice(device);
-      setCharacteristic(characteristic);
-    });
-  };
-  const disconnectFn = () => {
-    console.log('disconnect being called');
-    if (device) {
-      manager.cancelDeviceConnection(device.id);
-      setDevice(null);
-      setCharacteristic(null);
-      console.log('disconnected');
-    }
-  };
-  const dur = 0.1;
-  console.log(dur);
+  const [number, setNumber] = React.useState<number>(48);
+  const {client, device, state} = useMidiBleClient('MIDIPlex');
 
-  React.useEffect(() => {
-    connectFn();
-    // return disconnectFn();
-  });
+  if (client === null) {
+    return <Text>Connecting...</Text>;
+  }
 
   return (
     <View>
-      <Button
-        title="connect"
-        onPress={() => {
-          connectFn();
-        }}
-      />
-      <Button
-        title="disconnect"
-        onPress={() => {
-          disconnectFn();
-        }}
-      />
       <Text>{device ? device.name : ''} </Text>
       <TextInput
         style={styles.input}
         onChangeText={x => {
-          onChangeNumber(parseInt(x));
+          setNumber(parseInt(x, 10));
         }}
-        value={number || ''}
-        placeholder="useless placeholder"
+        value={number.toString()}
         keyboardType="numeric"
       />
       <Button
         title="send"
         onPress={() => {
-          if (characteristic) {
-            const note = number || 69;
-            sendMidiNote(characteristic, note || 69, 69);
-            setTimeout(() => {
-              sendMidiNote(characteristic, note || 69, 0);
-            }, dur);
-          } else {
-            console.warn('characteristic not set');
-          }
+          client.playNote(midiChannel, number, 100, 2);
         }}
       />
 
@@ -121,12 +79,7 @@ const App = () => {
                 borderColor: 'grey',
               }}
               onPress={() => {
-                if (characteristic) {
-                  sendMidiNote(characteristic, midinote, 69);
-                  setTimeout(() => {
-                    sendMidiNote(characteristic, midinote, 0);
-                  }, dur);
-                }
+                client?.playNote(midiChannel, midinote, 100, 2);
               }}>
               <Text style={{position: 'absolute', left: '50%', top: '50%'}}>
                 {midinote.toString()}
@@ -141,9 +94,7 @@ const App = () => {
                 borderColor: 'grey',
               }}
               onPress={() => {
-                if (characteristic) {
-                  sendMidiNote(characteristic, midinote, 0);
-                }
+                client?.noteOff(midiChannel, midinote);
               }}>
               <Text style={{position: 'absolute', left: '50%', top: '50%'}}>
                 off
@@ -155,11 +106,7 @@ const App = () => {
         <Button
           title="kill all"
           onPress={() => {
-            Array.from(Array(126).keys()).forEach(x => {
-              if (characteristic) {
-                sendMidiNote(characteristic, x, 0);
-              }
-            });
+            client?.noteOffAll(midiChannel);
           }}
         />
       </ScrollView>
