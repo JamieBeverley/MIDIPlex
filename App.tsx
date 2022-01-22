@@ -43,7 +43,7 @@ const connect = () => {
 const midiChannel = 2;
 const App = () => {
   const [number, setNumber] = React.useState<number>(48);
-  const {client, device, state} = useMidiBleClient('MIDIPlex');
+  const {client, device} = useMidiBleClient('MIDIPlex');
 
   if (client === null) {
     return <Text>Connecting...</Text>;
@@ -69,7 +69,7 @@ const App = () => {
 
       <ScrollView>
         {[60, 64, 67, 72].map(midinote => (
-          <View style={{display: 'flex', flexDirection: 'row'}}>
+          <View key={midinote} style={{display: 'flex', flexDirection: 'row'}}>
             <TouchableOpacity
               style={{
                 width: '50%',

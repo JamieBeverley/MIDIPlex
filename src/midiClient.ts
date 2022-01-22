@@ -1,4 +1,5 @@
 import {encode} from 'js-base64';
+import {Characteristic} from 'react-native-ble-plx';
 
 export class MidiClient {
   _characteristic: Characteristic;

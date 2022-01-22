@@ -62,7 +62,49 @@ type UseMidiBleT = {
   state: MidiBleState;
 };
 
-export const useMidiBleClient = function (deviceName: string): UseMidiBleT {
+export const useMidiBleClient3 = function (
+  deviceName: string,
+): MidiClient | null {
+  const [client, setClient] = useState<MidiClient | null>(null);
+
+  useEffect(() => {
+    const cleanup = () => {
+      console.log('Cleanup called where client is:', client);
+      if (client) {
+        client.disconnect();
+      }
+    };
+    const f = async () => {
+      await requestLocationPermission();
+      const device = await getDevice(deviceName);
+      await device.connect();
+      await device.discoverAllServicesAndCharacteristics();
+      const services = await device.services();
+      const uartService = services.find(
+        service => service.uuid === '6e400001-b5a3-f393-e0a9-e50e24dcca9e',
+      );
+      if (!uartService) {
+        return;
+      }
+      const characteristics = await uartService.characteristics();
+      const txCharacteristic = characteristics.find(
+        x => x.uuid === '6e400002-b5a3-f393-e0a9-e50e24dcca9e',
+      );
+      if (!txCharacteristic) {
+        return;
+      }
+      const midiClient = new MidiClient(device, txCharacteristic);
+      setClient(midiClient);
+      console.log('wtf?');
+    };
+    f();
+    return cleanup;
+  }, [deviceName, client]);
+  return client;
+};
+
+export const useMidiBleClient2 = function (deviceName: string): UseMidiBleT {
+  console.log('calling  useMDIBleClient');
   const [device, setDevice] = useState<Device | null>(null);
   const [state, setState] = useState<MidiBleState>('unconnected');
   const [client, setClient] = useState<MidiClient | null>(null);
@@ -71,20 +113,24 @@ export const useMidiBleClient = function (deviceName: string): UseMidiBleT {
     const cleanup = () => {
       manager.stopDeviceScan();
       if (device) {
+        console.log('@@@@@@disconnecting');
         manager.cancelDeviceConnection(device.id);
       }
       setDevice(null);
       setState('unconnected');
+      console.log('cleanup called');
     };
 
     const f = async () => {
       await requestLocationPermission();
       setState('scanning');
-      const pulledDevice = await getDevice(deviceName);
+      const pulledDevice = device || (await getDevice(deviceName));
       setDevice(pulledDevice);
-      await pulledDevice.connect();
+      const connected = await pulledDevice.isConnected();
+      if (!connected) {
+        await pulledDevice.connect();
+      }
       setState('connected');
-
       await pulledDevice.discoverAllServicesAndCharacteristics();
       const services = await pulledDevice.services();
       const uartService = services.find(
@@ -111,7 +157,85 @@ export const useMidiBleClient = function (deviceName: string): UseMidiBleT {
     f();
 
     return cleanup;
-  }, [deviceName, device]);
+  }, [deviceName]);
+
+  return {client, state, device};
+};
+
+type ConnectionState = 'none' | 'scanning' | 'found device' | 'connected' | '';
+
+export const useMidiBleClient = function (deviceName: string): UseMidiBleT {
+  console.log('calling  useMDIBleClient');
+  const [device, setDevice] = useState<Device | null>(null);
+  const [state, setState] = useState<MidiBleState>('unconnected');
+  const [client, setClient] = useState<MidiClient | null>(null);
+  const [connected, setConected] = useState<boolean>(false);
+
+  // Find device
+  useEffect(() => {
+    const f = async () => {
+      await requestLocationPermission();
+      setState('scanning');
+      const pulledDevice = await getDevice(deviceName);
+      manager.stopDeviceScan();
+      setDevice(pulledDevice);
+    };
+    f();
+    return () => {
+      manager.stopDeviceScan();
+      setDevice(null);
+    };
+  }, [deviceName]);
+
+  // Connect To device
+  useEffect(() => {
+    const f = async () => {
+      if (!device) {
+        return;
+      }
+      const isConnected = await device.isConnected();
+      if (!isConnected) {
+        await device.connect();
+      }
+      setConected(true);
+    };
+    f();
+    return () => {
+      if (device) {
+        manager.cancelDeviceConnection(device.id);
+      }
+      setConected(false);
+    };
+  }, [device]);
+
+  // Pull characteristic and set midiclient
+  useEffect(() => {
+    const f = async () => {
+      if (!device || !connected) {
+        return;
+      }
+      await device.discoverAllServicesAndCharacteristics();
+      const services = await device.services();
+      const uartService = services.find(
+        service => service.uuid === '6e400001-b5a3-f393-e0a9-e50e24dcca9e',
+      );
+      if (!uartService) {
+        return;
+      }
+      const characteristics = await uartService.characteristics();
+      const txCharacteristic = characteristics.find(
+        x => x.uuid === '6e400002-b5a3-f393-e0a9-e50e24dcca9e',
+      );
+      if (!txCharacteristic) {
+        return;
+      }
+      setClient(new MidiClient(txCharacteristic));
+    };
+    f();
+    return () => {
+      setClient(null);
+    };
+  }, [device, connected]);
 
   return {client, state, device};
 };
