@@ -49,125 +49,14 @@ const getDevice = (deviceName: string): Promise<Device> => {
   });
 };
 
-type MidiBleState =
-  | 'unconnected'
-  | 'scanning'
-  | 'connected'
-  | 'ready'
-  | 'failed';
-
 type UseMidiBleT = {
   client: MidiClient | null;
   device: Device | null;
-  state: MidiBleState;
 };
-
-export const useMidiBleClient3 = function (
-  deviceName: string,
-): MidiClient | null {
-  const [client, setClient] = useState<MidiClient | null>(null);
-
-  useEffect(() => {
-    const cleanup = () => {
-      console.log('Cleanup called where client is:', client);
-      if (client) {
-        client.disconnect();
-      }
-    };
-    const f = async () => {
-      await requestLocationPermission();
-      const device = await getDevice(deviceName);
-      await device.connect();
-      await device.discoverAllServicesAndCharacteristics();
-      const services = await device.services();
-      const uartService = services.find(
-        service => service.uuid === '6e400001-b5a3-f393-e0a9-e50e24dcca9e',
-      );
-      if (!uartService) {
-        return;
-      }
-      const characteristics = await uartService.characteristics();
-      const txCharacteristic = characteristics.find(
-        x => x.uuid === '6e400002-b5a3-f393-e0a9-e50e24dcca9e',
-      );
-      if (!txCharacteristic) {
-        return;
-      }
-      const midiClient = new MidiClient(device, txCharacteristic);
-      setClient(midiClient);
-      console.log('wtf?');
-    };
-    f();
-    return cleanup;
-  }, [deviceName, client]);
-  return client;
-};
-
-export const useMidiBleClient2 = function (deviceName: string): UseMidiBleT {
-  console.log('calling  useMDIBleClient');
-  const [device, setDevice] = useState<Device | null>(null);
-  const [state, setState] = useState<MidiBleState>('unconnected');
-  const [client, setClient] = useState<MidiClient | null>(null);
-
-  useEffect(() => {
-    const cleanup = () => {
-      manager.stopDeviceScan();
-      if (device) {
-        console.log('@@@@@@disconnecting');
-        manager.cancelDeviceConnection(device.id);
-      }
-      setDevice(null);
-      setState('unconnected');
-      console.log('cleanup called');
-    };
-
-    const f = async () => {
-      await requestLocationPermission();
-      setState('scanning');
-      const pulledDevice = device || (await getDevice(deviceName));
-      setDevice(pulledDevice);
-      const connected = await pulledDevice.isConnected();
-      if (!connected) {
-        await pulledDevice.connect();
-      }
-      setState('connected');
-      await pulledDevice.discoverAllServicesAndCharacteristics();
-      const services = await pulledDevice.services();
-      const uartService = services.find(
-        service => service.uuid === '6e400001-b5a3-f393-e0a9-e50e24dcca9e',
-      );
-      if (!uartService) {
-        cleanup();
-        setState('failed');
-        return;
-      }
-      const characteristics = await uartService.characteristics();
-      const txCharacteristic = characteristics.find(
-        x => x.uuid === '6e400002-b5a3-f393-e0a9-e50e24dcca9e',
-      );
-      if (!txCharacteristic) {
-        cleanup();
-        setState('failed');
-        return;
-      }
-      setClient(new MidiClient(txCharacteristic));
-      setState('ready');
-    };
-
-    f();
-
-    return cleanup;
-  }, [deviceName]);
-
-  return {client, state, device};
-};
-
-type ConnectionState = 'none' | 'scanning' | 'found device' | 'connected' | '';
 
 export const useMidiBleClient = function (deviceName: string): UseMidiBleT {
   console.log('calling  useMDIBleClient');
   const [device, setDevice] = useState<Device | null>(null);
-  const [state, setState] = useState<MidiBleState>('unconnected');
   const [client, setClient] = useState<MidiClient | null>(null);
   const [connected, setConected] = useState<boolean>(false);
 
@@ -175,7 +64,6 @@ export const useMidiBleClient = function (deviceName: string): UseMidiBleT {
   useEffect(() => {
     const f = async () => {
       await requestLocationPermission();
-      setState('scanning');
       const pulledDevice = await getDevice(deviceName);
       manager.stopDeviceScan();
       setDevice(pulledDevice);
@@ -201,6 +89,7 @@ export const useMidiBleClient = function (deviceName: string): UseMidiBleT {
     };
     f();
     return () => {
+      console.log('unmount');
       if (device) {
         manager.cancelDeviceConnection(device.id);
       }
@@ -237,5 +126,5 @@ export const useMidiBleClient = function (deviceName: string): UseMidiBleT {
     };
   }, [device, connected]);
 
-  return {client, state, device};
+  return {client, device};
 };
