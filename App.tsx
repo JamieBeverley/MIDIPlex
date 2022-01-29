@@ -22,7 +22,7 @@ const style = StyleSheet.create({
 });
 
 const App = () => {
-  const {client, device} = useMidiBleClient('MIDIPlex');
+  // const {client, device} = useMidiBleClient('MIDIPlex');
   return (
     <View style={style.container}>
       <Sequencer />

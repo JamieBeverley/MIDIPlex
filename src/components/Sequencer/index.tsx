@@ -8,6 +8,7 @@ import {Header} from '../Header';
 const Scales = {
   major: [0, 2, 4, 5, 7, 9, 11, 12],
   minor: [0, 2, 3, 5, 7, 8, 10, 12],
+  x: [],
 };
 
 const styles = StyleSheet.create({
@@ -31,9 +32,9 @@ const styles = StyleSheet.create({
 });
 
 const initialState: SequencerT = {
-  rows: Scales.major.map(note => ({
+  rows: Scales.x.map(note => ({
     note,
-    cells: repeatItem(false, Math.floor(Math.random() * 12) + 4).map(
+    cells: repeatItem(false, Math.floor(Math.random() * 0) + 16).map(
       active => ({
         active,
       }),
@@ -43,7 +44,25 @@ const initialState: SequencerT = {
 
 export const Sequencer = () => {
   const [state, setState] = useState<SequencerT>(initialState);
-  const {beat} = useClock(0, 1, 256);
+  // const state = initialState;
+  // const setState = (_: any) => {};
+  const [beat, setBeat] = useState<number>(0);
+  // const [beatSpeed, setBeatSpeed] = useState<number>(initialBeatSpeed || -1);
+  // const [tempo, setTempo] = useState<number>(initialTempo || 1);
+  console.log('?');
+  const tempo = 120 / 60;
+  useEffect(() => {
+    const int = setTimeout(() => {
+      console.log(new Date().getTime());
+      setBeat(beat + 1);
+    }, 1000 / tempo);
+
+    return () => {
+      console.log('cleanup');
+      clearTimeout(int);
+    };
+  });
+  // const {beat} = useClock(0, 1, (120 * 1) / 60);
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -58,15 +77,16 @@ export const Sequencer = () => {
               cells={cells}
               beat={beat}
               setCellActive={(cellIndex, value) => {
-                const newCells = [...cells];
-                newCells[cellIndex] = {active: value};
-                const newRow = {
-                  note,
-                  cells: newCells,
-                };
-                const newRows = [...state.rows];
-                newRows[index] = newRow;
-                setState({rows: newRows});
+                return;
+                // const newCells = [...cells];
+                // newCells[cellIndex] = {active: value};
+                // const newRow = {
+                //   note,
+                //   cells: newCells,
+                // };
+                // const newRows = [...state.rows];
+                // newRows[index] = newRow;
+                // setState({rows: newRows});
               }}
             />
           );
