@@ -19,21 +19,32 @@ const styles = StyleSheet.create({
 });
 
 export interface PropType extends RowT {
-  setCellActive: (cellIndex: number, value: boolean) => void;
+  setCellActive: (note: number, cellIndex: number, value: boolean) => void;
   beat: number;
 }
 
 export const Row = (props: PropType) => {
+  const {setCellActive, note} = props;
+  const cb = React.useCallback(
+    (index, active) => {
+      setCellActive(note, index, active);
+    },
+    [setCellActive, note],
+  );
   return (
     <View style={styles.row}>
       <Text style={styles.text}>{props.note}</Text>
       {props.cells.map(({...cellProp}, index) => (
         <Cell
           key={index}
+          index={index}
           {...cellProp}
-          setActive={active => {
-            props.setCellActive(index, active);
-          }}
+          // setActive={active => {
+          //   props.setCellActive(index, active);
+          // }}
+          // setActive={f}
+          setActive={cb}
+          // beatActive={false}
           beatActive={props.beat % props.cells.length === index}
         />
       ))}

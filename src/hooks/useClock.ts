@@ -1,13 +1,20 @@
 import {useState, useEffect} from 'react';
+import {clock} from '../Clock';
 
-export type Clock = {
+export type ClockT = {
   beat: number;
   beatSpeed: number;
   tempo: number;
   tempoLastSet: number;
 };
 
-export const useClock = (
+export const useClock = () => {
+  const [beat, setBeat] = useState<number>(clock.beat);
+  clock.setBeatCallback(setBeat);
+  return {beat, setBeat: clock.setBeat};
+};
+
+export const useClock2 = (
   initialBeat?: number,
   initialBeatSpeed?: number,
   initialTempo?: number,

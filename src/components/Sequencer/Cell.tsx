@@ -25,11 +25,12 @@ const styles = StyleSheet.create({
 });
 
 export interface PropType extends CellT {
-  setActive: (value: boolean) => void;
+  index: number;
+  setActive: (index: number, value: boolean) => void;
   beatActive: boolean;
 }
 
-export const Cell = (props: PropType) => {
+export const Cell = React.memo((props: PropType) => {
   const outerStyle = {
     ...styles.outer,
     ...(props.active ? styles.outerActive : {}),
@@ -44,9 +45,9 @@ export const Cell = (props: PropType) => {
     <TouchableOpacity
       style={outerStyle}
       onPress={() => {
-        props.setActive(!props.active);
+        props.setActive(props.index, !props.active);
       }}>
       <View style={innerStyle} />
     </TouchableOpacity>
   );
-};
+});
