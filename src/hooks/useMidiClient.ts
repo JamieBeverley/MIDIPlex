@@ -2,6 +2,7 @@ import {useEffect, useState} from 'react';
 import {PermissionsAndroid} from 'react-native';
 import {Device, BleManager} from 'react-native-ble-plx';
 import {MidiClient} from '../midiClient';
+import {setMidiDevice, setMidiState} from '../store';
 
 export const manager = new BleManager();
 
@@ -56,27 +57,31 @@ type UseMidiBleT = {
 
 export const useMidiBleClient = function (deviceName: string): UseMidiBleT {
   console.log('calling  useMDIBleClient');
-  const [device, setDevice] = useState<Device | null>(null);
+  const [device, setStateDevice] = useState<Device | null>(null);
   const [client, setClient] = useState<MidiClient | null>(null);
   const [connected, setConected] = useState<boolean>(false);
 
   // Find device
   useEffect(() => {
     const f = async () => {
+      setMidiState('scanning');
       await requestLocationPermission();
       const pulledDevice = await getDevice(deviceName);
       manager.stopDeviceScan();
-      setDevice(pulledDevice);
+      setStateDevice(pulledDevice);
+      setMidiDevice(pulledDevice);
     };
     f();
     return () => {
       manager.stopDeviceScan();
-      setDevice(null);
+      setMidiDevice(null);
+      setStateDevice(null);
     };
   }, [deviceName]);
 
   // Connect To device
   useEffect(() => {
+    setMidiState('connecting');
     const f = async () => {
       if (!device) {
         return;
@@ -99,6 +104,8 @@ export const useMidiBleClient = function (deviceName: string): UseMidiBleT {
 
   // Pull characteristic and set midiclient
   useEffect(() => {
+    setMidiState('observing');
+
     const f = async () => {
       if (!device || !connected) {
         return;
@@ -119,6 +126,7 @@ export const useMidiBleClient = function (deviceName: string): UseMidiBleT {
         return;
       }
       setClient(new MidiClient(txCharacteristic));
+      setMidiState('initialized');
     };
     f();
     return () => {

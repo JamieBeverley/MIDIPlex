@@ -1,5 +1,6 @@
 import {encode} from 'js-base64';
 import {Characteristic} from 'react-native-ble-plx';
+import {RowT} from './components/Sequencer/dataTypes';
 
 export class MidiClient {
   _characteristic: Characteristic;
@@ -22,6 +23,14 @@ export class MidiClient {
     setTimeout(() => {
       this.noteOff(channel, midinote);
     }, seconds * 1000);
+  }
+
+  playState(beat: number, rows: RowT[]) {
+    rows.forEach(({note, cells}) => {
+      if (cells[beat % cells.length].active) {
+        this.playNote(2, note, 100, 1);
+      }
+    });
   }
 
   noteOn(channel: number, midinote: number, velocity: number) {

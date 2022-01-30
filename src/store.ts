@@ -1,11 +1,34 @@
-import {createSlice, configureStore, PayloadAction} from '@reduxjs/toolkit';
+import {
+  createSlice,
+  configureStore,
+  PayloadAction,
+  applyMiddleware,
+  Middleware,
+} from '@reduxjs/toolkit';
+import {Characteristic, Device} from 'react-native-ble-plx';
 import {clock, ClockT} from './Clock';
 import {Sequencer} from './components/Sequencer/dataTypes';
+import {MidiClient} from './midiClient';
 import {repeatItem} from './util';
+
+type MIDIState =
+  | 'dormant'
+  | 'scanning'
+  | 'connecting'
+  | 'observing'
+  | 'initialized'
+  | 'failed';
+
+type MIDI = {
+  state: MIDIState;
+  device: string;
+  characteristic: string;
+};
 
 export type State = {
   sequencer: Sequencer;
   clock: ClockT;
+  midi: MIDI;
 };
 
 const Scales = {
@@ -14,7 +37,7 @@ const Scales = {
   x: [],
 };
 
-const sequencer: Sequencer = {
+const initialSequencer: Sequencer = {
   rows: Scales.major.map(note => ({
     note,
     cells: repeatItem(false, Math.floor(Math.random() * 0) + 16).map(
@@ -25,10 +48,16 @@ const sequencer: Sequencer = {
   })),
 };
 
+const initialMidi: MIDI = {
+  state: 'dormant',
+  device: '',
+  characteristic: '',
+};
+
 export const stateSlice = createSlice({
   name: 'state',
   initialState: {
-    sequencer,
+    sequencer: initialSequencer,
     clock: {
       beat: clock.beat,
       beatSpeed: clock.beatSpeed,
@@ -36,6 +65,7 @@ export const stateSlice = createSlice({
       tempo: clock.tempo,
       lastBeats: [new Date().getTime()],
     },
+    midi: initialMidi,
   },
   reducers: {
     toggleCell: (
@@ -74,23 +104,59 @@ export const stateSlice = createSlice({
     setBeatSpeed: (state: State, action: PayloadAction<number>) => {
       state.clock.beatSpeed = action.payload;
     },
+    setMidiState: (state: State, action: PayloadAction<MIDIState>) => {
+      state.midi.state = action.payload;
+    },
+    setMidiDevice: (state: State, action: PayloadAction<Device | null>) => {
+      if (action.payload !== null) {
+        state.midi.device = action.payload.name || '';
+      }
+      state.midi.device = '';
+    },
+    setCharacteristic: (
+      state: State,
+      action: PayloadAction<Characteristic | null>,
+    ) => {
+      if (action.payload !== null) {
+        state.midi.characteristic = action.payload.serviceUUID || '';
+      }
+      state.midi.characteristic = '';
+    },
   },
 });
 
-export const {toggleCell, setBeat, setTempo, setBeatSpeed} = stateSlice.actions;
+export const {
+  toggleCell,
+  setBeat,
+  setTempo,
+  setBeatSpeed,
+  setMidiState,
+  setMidiDevice,
+} = stateSlice.actions;
 
-export const store = configureStore({
-  reducer: stateSlice.reducer,
-});
-
-export type StateDispatch = typeof store.dispatch;
-
-const midiMiddleware = store => next => action => {
-  if (action.type === 'setBeat') {
+// Middleware
+let client: MidiClient | null = null;
+const midiMiddleware: Middleware = store => next => action => {
+  if (action.type === 'setCharacteristic') {
+    if (action.payload === null) {
+      // TODO probaby a memory leak.
+      client = null;
+    } else {
+      client = new MidiClient(action.payload);
+    }
+  } else if (action.type === 'setBeat' && client !== null) {
+    const state = store.getState();
+    client.playState(state.clock.beat, store.getState().sequencer.rows);
   }
   return next(action);
 };
 
+export const store = configureStore({
+  reducer: stateSlice.reducer,
+  middleware: [midiMiddleware],
+});
+
+export type StateDispatch = typeof store.dispatch;
 clock.setBeatCallback(beat => {
   store.dispatch(setBeat(beat));
 });
