@@ -32,6 +32,7 @@ export const stateSlice = createSlice({
     clock: {
       beat: clock.beat,
       beatSpeed: clock.beatSpeed,
+      absBeat: clock.absBeat,
       tempo: clock.tempo,
       lastBeats: [new Date().getTime()],
     },
@@ -50,8 +51,6 @@ export const stateSlice = createSlice({
         state.sequencer.rows[rowIndex] &&
         state.sequencer.rows[rowIndex].cells[cellIndex]
       ) {
-        console.log('toggle');
-
         state.sequencer.rows[rowIndex].cells[cellIndex].active = active;
       }
     },
@@ -85,6 +84,12 @@ export const store = configureStore({
 });
 
 export type StateDispatch = typeof store.dispatch;
+
+const midiMiddleware = store => next => action => {
+  if (action.type === 'setBeat') {
+  }
+  return next(action);
+};
 
 clock.setBeatCallback(beat => {
   store.dispatch(setBeat(beat));

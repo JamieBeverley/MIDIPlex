@@ -1,8 +1,7 @@
 import React from 'react';
-import {View, StyleSheet, Text, FlatList} from 'react-native';
+import {View, StyleSheet, Text} from 'react-native';
 import {RowT} from './dataTypes';
 import {Cell} from './Cell';
-import {CellT} from './dataTypes';
 import {useStateDispatch, useStateSelector} from '../../hooks/state';
 import {toggleCell} from '../../store';
 
@@ -13,23 +12,23 @@ const styles = StyleSheet.create({
     textAlignVertical: 'center',
     width: 30,
   },
-  flatList: {
+  buttons: {
     width: '100%',
+    height: '100%',
+    flexDirection: 'row',
   },
   row: {
     width: '100%',
     height: '100%',
     flex: 1,
-    borderWidth: 1,
-    borderColor: 'red',
-    // flexDirection: 'row',
+    flexDirection: 'row',
   },
   indicator: {
     position: 'absolute',
     bottom: 0,
     backgroundColor: 'white',
     width: 1,
-    height: 2,
+    height: '50%',
   },
 });
 
@@ -39,11 +38,17 @@ export interface PropType extends RowT {
 
 const Indicator = (props: {length: number}) => {
   const beat = useStateSelector(x => x.clock.beat);
+  let pct;
+  if (beat < 0) {
+    pct = ((props.length + (beat % props.length)) * 100) / props.length;
+  } else {
+    pct = ((beat % props.length) * 100) / props.length;
+  }
   return (
     <View
       style={{
         ...styles.indicator,
-        left: `${((beat % props.length) * 100) / props.length}%`,
+        left: `${pct}%`,
       }}
     />
   );
@@ -63,24 +68,15 @@ export const Row = (props: PropType) => {
     },
     [dispatch, props.index],
   );
-  console.log(props.cells.map(x => x.active));
   return (
     <View style={styles.row}>
       <Text style={styles.text}>{props.note}</Text>
-      <View style={{flex: 1}}>
-        <FlatList<CellT>
-          contentContainerStyle={{
-            flexGrow: 1,
-            borderWidth: 1,
-            borderColor: 'blue',
-          }}
-          style={styles.flatList}
-          data={props.cells}
-          horizontal
-          renderItem={({item, index}) => (
-            <Cell index={index} setActive={cb} active={item.active} />
-          )}
-        />
+      <View style={{position: 'relative', width: '100%'}}>
+        <View style={styles.buttons}>
+          {props.cells.map(({active}, index) => (
+            <Cell key={index} index={index} setActive={cb} active={active} />
+          ))}
+        </View>
         <Indicator length={props.cells.length} />
       </View>
     </View>

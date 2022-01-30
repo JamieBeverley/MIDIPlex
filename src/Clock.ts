@@ -1,5 +1,6 @@
 export type ClockT = {
   beat: number;
+  absBeat: number;
   lastBeats: number[];
   beatSpeed: number;
   tempo: number;
@@ -13,6 +14,7 @@ class Clock {
   beatCallback?: (beat: number) => any;
   lastTickTs: number;
   initTs: number;
+  absBeat: number;
 
   constructor(
     tempo: number,
@@ -26,16 +28,16 @@ class Clock {
     this.beatCallback = beatCallback;
     this.lastTickTs = 0;
     this.initTs = 0;
+    this.absBeat = beat;
   }
 
   init() {
     const loop = () => {
       const now = new Date().getTime();
-      this.setBeat(this.beat + 1);
-      const wait = (this.beat * 1000 * 15) / this.tempo + this.initTs - now;
+      this.setBeat(this.beat + this.beatSpeed);
+      this.absBeat += 1;
+      const wait = (this.absBeat * 1000 * 15) / this.tempo + this.initTs - now;
       this.timeout = setTimeout(loop, wait);
-      // const absT = now - this.initTs - (this.beat * (this.tempo / 60)) / 1000;
-      // const diff = (now - this.lastTickTs) / 1000;
       this.lastTickTs = now;
     };
     const wait =
@@ -43,18 +45,6 @@ class Clock {
     this.initTs = new Date().getTime();
     this.timeout = setTimeout(loop, wait);
   }
-
-  // init2() {
-  //   if (this.interval !== undefined) {
-  //     clearInterval(this.interval);
-  //   }
-  //   this.initTs = new Date().getTime();
-  //   this.interval = setInterval(() => {
-  //     this.lastTickTs = t;
-  //     this.setBeat(this.beat + this.beatSpeed);
-  //     console.log(`tick ${this.beat}`);
-  //   }, 1000 / (this.tempo / 60));
-  // }
 
   setBeat(beat: number) {
     this.beat = beat;
@@ -84,4 +74,4 @@ class Clock {
   }
 }
 
-export const clock = new Clock(140, 0, 1);
+export const clock = new Clock(120, 0, -1);
