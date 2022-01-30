@@ -1,15 +1,10 @@
-import React, {useEffect, useState} from 'react';
-import {View, StyleSheet} from 'react-native';
+import React from 'react';
+import {View, StyleSheet, FlatList} from 'react-native';
 import {Row} from './Row';
-import {Sequencer as SequencerT} from './dataTypes';
-import {repeatItem} from '../../util';
+import {RowT} from './dataTypes';
 import {useClock} from '../../hooks/useClock';
 import {Header} from '../Header';
-const Scales = {
-  major: [0, 2, 4, 5, 7, 9, 11, 12],
-  minor: [0, 2, 3, 5, 7, 8, 10, 12],
-  x: [],
-};
+import {useStateSelector, useStateDispatch} from '../../hooks/state';
 
 const styles = StyleSheet.create({
   container: {
@@ -30,48 +25,47 @@ const styles = StyleSheet.create({
     height: 80,
   },
 });
-
-const initialState: SequencerT = {
-  rows: Scales.major.map(note => ({
-    note,
-    cells: repeatItem(false, Math.floor(Math.random() * 0) + 16).map(
-      active => ({
-        active,
-      }),
-    ),
-  })),
-};
-
 export const Sequencer = () => {
-  const [state, setState] = useState<SequencerT>(initialState);
+  const state = useStateSelector(x => x.sequencer);
+  const dispatch = useStateDispatch();
+  // const {beat} = useClock();
 
-  const setCellActive = React.useCallback(
-    (note, cellIndex, value) => {
-      const rowIndex = state.rows.findIndex(x => x.note === note);
-      if (rowIndex < 0) {
-        return;
-      }
-      const row = state.rows[rowIndex];
-      const newCells = [...row.cells];
-      newCells[cellIndex] = {active: value};
-      const newRow = {
-        note,
-        cells: newCells,
-      };
-      const newRows = [...state.rows];
-      newRows[rowIndex] = newRow;
-      setState({rows: newRows});
-    },
-    [state],
-  );
+  // const [state, setState] = useState<SequencerT>(initialState);
 
-  const {beat} = useClock();
+  // const setCellActive = React.useCallback(
+  //   (note, cellIndex, value) => {
+  //     const rowIndex = state.rows.findIndex(x => x.note === note);
+  //     if (rowIndex < 0) {
+  //       return;
+  //     }
+  //     const row = state.rows[rowIndex];
+  //     const newCells = [...row.cells];
+  //     newCells[cellIndex] = {active: value};
+  //     const newRow = {
+  //       note,
+  //       cells: newCells,
+  //     };
+  //     const newRows = [...state.rows];
+  //     newRows[rowIndex] = newRow;
+
+  //     setState({rows: newRows});
+  //   },
+  //   [state],
+  // );
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Header beat={beat} />
+        <Header beat={0} />
       </View>
-      <View style={styles.sequencer}>
+      <FlatList<RowT>
+        style={styles.sequencer}
+        data={state.rows}
+        renderItem={({item, index}) => (
+          <Row note={item.note} cells={item.cells} index={index} />
+        )}
+      />
+      {/* <View style={styles.sequencer}>
         {state.rows.map(({note, cells}, index) => {
           return (
             <Row
@@ -83,7 +77,7 @@ export const Sequencer = () => {
             />
           );
         })}
-      </View>
+      </View> */}
     </View>
   );
 };

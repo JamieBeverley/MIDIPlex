@@ -1,20 +1,20 @@
 import React from 'react';
-import {View, StyleSheet} from 'react-native';
+import {View, StyleSheet, FlatList} from 'react-native';
 import {repeatItem} from '../../util';
 
 const styles = StyleSheet.create({
   beat: {
-    borderColor: 'white',
+    borderColor: 'darkgrey',
     borderWidth: 1,
-    width: '100%',
+    width: 10,
   },
   container: {
-    width: 10,
+    width: 160,
     height: '50%',
-    flexDirection: 'row',
+    // flexDirection: 'row',
   },
   active: {
-    backgroundColor: 'teal',
+    backgroundColor: 'white',
   },
 });
 
@@ -23,21 +23,24 @@ export type PropType = {
   length: number;
 };
 
+const data = repeatItem(null, 16);
+
 export const BeatIndicator = (props: PropType) => {
+  return null;
   const {beat, length} = props;
   return (
-    <View style={styles.container}>
-      {repeatItem(null, props.length).map((_, index) => {
-        return (
-          <View
-            key={index}
-            style={{
-              ...styles.beat,
-              ...(beat % length === index ? styles.active : {}),
-            }}
-          />
-        );
-      })}
-    </View>
+    <FlatList
+      style={styles.container}
+      data={data}
+      horizontal
+      renderItem={({index}) => (
+        <View
+          style={{
+            ...styles.beat,
+            ...(beat % length === index ? styles.active : {}),
+          }}
+        />
+      )}
+    />
   );
 };

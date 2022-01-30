@@ -10,8 +10,9 @@
 
 import React from 'react';
 import {Sequencer} from './src/components/Sequencer';
-import {useMidiBleClient} from './src/hooks/useMidiClient';
 import {View, StyleSheet} from 'react-native';
+import {Provider} from 'react-redux';
+import {store} from './src/store';
 
 const style = StyleSheet.create({
   container: {
@@ -24,9 +25,11 @@ const style = StyleSheet.create({
 const App = () => {
   // const {client, device} = useMidiBleClient('MIDIPlex');
   return (
-    <View style={style.container}>
-      <Sequencer />
-    </View>
+    <Provider store={store}>
+      <View style={style.container}>
+        <Sequencer />
+      </View>
+    </Provider>
   );
 };
 

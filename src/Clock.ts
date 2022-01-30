@@ -1,3 +1,10 @@
+export type ClockT = {
+  beat: number;
+  lastBeats: number[];
+  beatSpeed: number;
+  tempo: number;
+};
+
 class Clock {
   private timeout?: ReturnType<typeof setTimeout> = undefined;
   tempo: number;
@@ -77,5 +84,4 @@ class Clock {
   }
 }
 
-export const clock = new Clock(120, 0, 1);
-clock.init();
+export const clock = new Clock(140, 0, 1);

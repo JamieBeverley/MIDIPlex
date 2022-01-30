@@ -11,7 +11,7 @@ export type ClockT = {
 export const useClock = () => {
   const [beat, setBeat] = useState<number>(clock.beat);
   clock.setBeatCallback(setBeat);
-  return {beat, setBeat: clock.setBeat};
+  return {beat, setBeat: clock.setBeat, setTempo: clock.setTempo};
 };
 
 export const useClock2 = (
