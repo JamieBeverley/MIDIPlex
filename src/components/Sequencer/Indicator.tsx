@@ -7,7 +7,7 @@ const styles = StyleSheet.create({
   indicator: {
     position: 'absolute',
     bottom: 0,
-    backgroundColor: 'white',
+    backgroundColor: '#60c689',
     width: 1,
     height: '50%',
   },

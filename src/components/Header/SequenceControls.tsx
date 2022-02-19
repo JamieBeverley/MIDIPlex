@@ -1,11 +1,6 @@
-import React, {useState} from 'react';
-import {
-  TouchableOpacity,
-  Image,
-  View,
-  StyleSheet,
-  TextInput,
-} from 'react-native';
+import React from 'react';
+import {TouchableOpacity, Image, View, StyleSheet} from 'react-native';
+import TextInput from '../TextInput';
 import {useStateDispatch, useStateSelector} from '../../hooks/state';
 import {setBeat, setBeatSpeed, setTempo} from '../../store';
 
@@ -40,17 +35,12 @@ const styles = StyleSheet.create({
 export default function SequenceControls() {
   const dispatch = useStateDispatch();
   const {beatSpeed, tempo} = useStateSelector(x => x.clock);
-  const [localBeatSpeed, setLocalBeatSpeed] = useState(
-    Math.abs(beatSpeed).toString(),
-  );
-  const [localTempo, setLocalTempo] = useState(tempo.toString());
 
   return (
     <View style={styles.sequenceControls}>
       <TouchableOpacity
         style={styles.buttonWrapper}
         onPress={() => {
-          console.log('???');
           dispatch(setBeatSpeed(0));
         }}>
         <Image style={styles.img} source={require('./icons/pause.png')} />
@@ -92,9 +82,9 @@ export default function SequenceControls() {
       </TouchableOpacity>
 
       <TextInput
-        onChangeText={t => setLocalBeatSpeed(t)}
-        onSubmitEditing={e => {
-          const value = parseFloat(e.nativeEvent.text);
+        storeValue={Math.abs(beatSpeed).toString()}
+        onEntered={text => {
+          const value = parseFloat(text);
           if (!isNaN(value)) {
             dispatch(setBeatSpeed(value * Math.sign(beatSpeed)));
           }
@@ -103,14 +93,13 @@ export default function SequenceControls() {
           color: 'red',
           backgroundColor: 'black',
         }}
-        value={localBeatSpeed}
         keyboardType="decimal-pad"
       />
 
       <TextInput
-        onChangeText={t => setLocalTempo(t)}
-        onSubmitEditing={e => {
-          const value = parseFloat(e.nativeEvent.text);
+        storeValue={tempo.toString()}
+        onEntered={text => {
+          const value = parseFloat(text);
           if (!isNaN(value)) {
             dispatch(setTempo(value * Math.sign(beatSpeed)));
           }
@@ -119,7 +108,6 @@ export default function SequenceControls() {
           color: 'red',
           backgroundColor: 'black',
         }}
-        value={localTempo}
         keyboardType="decimal-pad"
       />
     </View>

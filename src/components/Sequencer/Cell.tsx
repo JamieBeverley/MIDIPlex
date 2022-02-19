@@ -9,10 +9,11 @@ const styles = StyleSheet.create({
   cell: {
     marginLeft: 5,
     marginRight: 5,
-    borderRadius: 20,
+    borderRadius: 5,
     width: '100%',
     height: '100%',
-    borderColor: '#5a5a5a',
+    // borderColor: '#5a5a5a',
+    borderColor: '#e91e63',
     borderWidth: 1,
     flexGrow: 1,
     flex: 1,

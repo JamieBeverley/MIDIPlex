@@ -3,6 +3,7 @@ import {
   configureStore,
   PayloadAction,
   Middleware,
+  current,
 } from '@reduxjs/toolkit';
 import {Characteristic, Device} from 'react-native-ble-plx';
 import {clock, ClockT} from './Clock';
@@ -96,6 +97,27 @@ export const stateSlice = createSlice({
       // console.log(bpm);
       state.clock.beat = action.payload;
     },
+    setRowLength: (
+      state: State,
+      action: PayloadAction<{rowIndex: number; length: number}>,
+    ) => {
+      const {rowIndex, length} = action.payload;
+      if (state.sequencer.rows.length > rowIndex) {
+        const currentLen = state.sequencer.rows[rowIndex].cells.length;
+        if (currentLen < length) {
+          console.log(currentLen, length);
+          state.sequencer.rows[rowIndex].cells = state.sequencer.rows[
+            rowIndex
+          ].cells.concat(repeatItem({active: false}, length - currentLen));
+        } else {
+          state.sequencer.rows[rowIndex].cells = state.sequencer.rows[
+            rowIndex
+          ].cells.slice(0, length);
+        }
+      } else {
+        console.warn(`No row with index ${rowIndex}`);
+      }
+    },
     setTempo: (state: State, action: PayloadAction<number>) => {
       state.clock.tempo = action.payload;
     },
@@ -147,6 +169,7 @@ export const {
   setMidiState,
   setMidiDevice,
   setScale,
+  setRowLength,
 } = stateSlice.actions;
 
 // Middleware
