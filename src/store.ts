@@ -164,6 +164,8 @@ const midiMiddleware: Middleware = store => next => action => {
     client.playState(state.clock.beat, store.getState().sequencer.rows);
   } else if (action.type === 'state/setBeatSpeed') {
     clock.setBeatSpeed(action.payload);
+  } else if (action.type === 'state/setTempo') {
+    clock.setTempo(action.payload);
   }
   return next(action);
 };

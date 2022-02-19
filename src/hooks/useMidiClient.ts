@@ -56,7 +56,6 @@ type UseMidiBleT = {
 };
 
 export const useMidiBleClient = function (deviceName: string): UseMidiBleT {
-  console.log('calling  useMDIBleClient');
   const [device, setStateDevice] = useState<Device | null>(null);
   const [client, setClient] = useState<MidiClient | null>(null);
   const [connected, setConected] = useState<boolean>(false);
@@ -94,7 +93,6 @@ export const useMidiBleClient = function (deviceName: string): UseMidiBleT {
     };
     f();
     return () => {
-      console.log('unmount');
       if (device) {
         manager.cancelDeviceConnection(device.id);
       }

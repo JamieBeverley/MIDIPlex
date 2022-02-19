@@ -7,7 +7,7 @@ import {
   TextInput,
 } from 'react-native';
 import {useStateDispatch, useStateSelector} from '../../hooks/state';
-import {setBeat, setBeatSpeed} from '../../store';
+import {setBeat, setBeatSpeed, setTempo} from '../../store';
 
 const styles = StyleSheet.create({
   sequenceControls: {
@@ -39,8 +39,11 @@ const styles = StyleSheet.create({
 
 export default function SequenceControls() {
   const dispatch = useStateDispatch();
-  const beatSpeed = useStateSelector(x => x.clock.beatSpeed);
-  const [text, setText] = useState(Math.abs(beatSpeed).toString());
+  const {beatSpeed, tempo} = useStateSelector(x => x.clock);
+  const [localBeatSpeed, setLocalBeatSpeed] = useState(
+    Math.abs(beatSpeed).toString(),
+  );
+  const [localTempo, setLocalTempo] = useState(tempo.toString());
 
   return (
     <View style={styles.sequenceControls}>
@@ -89,7 +92,7 @@ export default function SequenceControls() {
       </TouchableOpacity>
 
       <TextInput
-        onChangeText={t => setText(t)}
+        onChangeText={t => setLocalBeatSpeed(t)}
         onSubmitEditing={e => {
           const value = parseFloat(e.nativeEvent.text);
           if (!isNaN(value)) {
@@ -100,7 +103,23 @@ export default function SequenceControls() {
           color: 'red',
           backgroundColor: 'black',
         }}
-        value={text}
+        value={localBeatSpeed}
+        keyboardType="decimal-pad"
+      />
+
+      <TextInput
+        onChangeText={t => setLocalTempo(t)}
+        onSubmitEditing={e => {
+          const value = parseFloat(e.nativeEvent.text);
+          if (!isNaN(value)) {
+            dispatch(setTempo(value * Math.sign(beatSpeed)));
+          }
+        }}
+        style={{
+          color: 'red',
+          backgroundColor: 'black',
+        }}
+        value={localTempo}
         keyboardType="decimal-pad"
       />
     </View>

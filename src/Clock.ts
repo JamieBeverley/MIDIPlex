@@ -45,30 +45,9 @@ class Clock {
       this.setBeat(this.beat + this.beatSpeed);
       this.absBeat += 1;
     };
-    this.timeout = setInterval(loop, (60 * 1000) / 4 / this.tempo);
+    const t = (60 * 1000) / this.tempo;
+    this.timeout = setInterval(loop, t);
   }
-
-  // init() {
-  //   if (this.timeout !== undefined) {
-  //     clearTimeout(this.timeout);
-  //   }
-  //   const loop = () => {
-  //     const now = new Date().getTime();
-  //     this.setBeat(this.beat + this.beatSpeed);
-  //     this.absBeat += 1;
-  //     const wait = (this.absBeat * 1000 * 15) / this.tempo + this.initTs - now;
-  //     console.log('wait 2::::::::::::::::', wait);
-  //     this.timeout = setTimeout(loop, wait);
-  //     this.lastTickTs = now;
-  //   };
-  //   // const wait = (this.beat*1000*15/this.state.tempo+this.state.tempo_set_ts) - this.now();
-
-  //   const wait =
-  //     (this.beat * 1000 * 15) / this.tempo + this.initTs - new Date().getTime();
-  //   console.log('wait 1________', wait);
-  //   this.initTs = new Date().getTime();
-  //   this.timeout = setTimeout(loop, wait);
-  // }
 
   setBeat(beat: number) {
     this.beat = beat;
