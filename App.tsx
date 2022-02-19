@@ -10,7 +10,7 @@
 
 import React from 'react';
 import {Sequencer} from './src/components/Sequencer';
-import {View, StyleSheet} from 'react-native';
+import {View, StyleSheet, StatusBar} from 'react-native';
 import {Provider} from 'react-redux';
 import {store} from './src/store';
 
@@ -27,6 +27,7 @@ const App = () => {
   return (
     <Provider store={store}>
       <View style={style.container}>
+        <StatusBar backgroundColor={style.container.backgroundColor} />
         <Sequencer />
       </View>
     </Provider>

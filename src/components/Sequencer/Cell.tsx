@@ -4,16 +4,18 @@ import {CellT} from './dataTypes';
 
 const styles = StyleSheet.create({
   cellActive: {
-    backgroundColor: '#EEFFFF',
+    backgroundColor: '#e91e63',
   },
   cell: {
+    marginLeft: 5,
+    marginRight: 5,
+    borderRadius: 20,
     width: '100%',
     height: '100%',
     borderColor: '#5a5a5a',
     borderWidth: 1,
     flexGrow: 1,
     flex: 1,
-    // padding: 5,
   },
 });
 

@@ -45,7 +45,7 @@ class Clock {
       this.setBeat(this.beat + this.beatSpeed);
       this.absBeat += 1;
     };
-    const t = (60 * 1000) / this.tempo;
+    const t = (60 * 1000) / 2 / this.tempo;
     this.timeout = setInterval(loop, t);
   }
 
@@ -63,7 +63,6 @@ class Clock {
 
   setBeatSpeed(beatSpeed: number) {
     this.beatSpeed = beatSpeed;
-    console.log('bs changed');
     this.init();
   }
 

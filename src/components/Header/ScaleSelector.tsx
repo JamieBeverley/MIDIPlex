@@ -16,7 +16,8 @@ export const style = StyleSheet.create({
   },
   scaleSelector: {
     borderColor: 'grey',
-    borderWidth: 1,
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
   },
 });
 

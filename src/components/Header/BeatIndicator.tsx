@@ -8,8 +8,8 @@ const styles = StyleSheet.create({
   beatIndicator: {
     width: 80,
     height: '100%',
-    borderWidth: 1,
-    borderColor: 'grey',
+    // borderWidth: 1,
+    // borderColor: 'grey',
   },
   text: {
     color: 'white',
@@ -18,7 +18,7 @@ const styles = StyleSheet.create({
     width: '50%',
   },
   textContainer: {
-    borderBottomWidth: 1,
+    // borderBottomWidth: 1,
     borderColor: 'grey',
     width: '100%',
     display: 'flex',
