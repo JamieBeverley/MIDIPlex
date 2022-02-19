@@ -1,10 +1,5 @@
 import React from 'react';
-import {
-  TouchableOpacity,
-  StyleSheet,
-  TouchableWithoutFeedback,
-  View,
-} from 'react-native';
+import {StyleSheet, TouchableWithoutFeedback, View} from 'react-native';
 import {CellT} from './dataTypes';
 
 const styles = StyleSheet.create({
@@ -18,7 +13,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     flexGrow: 1,
     flex: 1,
-    padding: 5,
+    // padding: 5,
   },
 });
 

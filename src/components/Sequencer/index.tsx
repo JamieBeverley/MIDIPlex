@@ -15,9 +15,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'black',
     color: 'white',
     width: '100%',
-    height: 200,
+    height: '100%',
     flex: 1,
-    alignSelf: 'stretch',
+    // alignSelf: 'stretch',
   },
   header: {
     height: 80,
@@ -29,9 +29,7 @@ export const Sequencer = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Header beat={0} />
-      </View>
+      <Header />
       <View style={styles.sequencer}>
         {state.rows.map(({note, cells}, index) => (
           <Row key={index} note={note} cells={cells} index={index} />
