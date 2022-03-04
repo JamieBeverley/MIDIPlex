@@ -17,7 +17,8 @@ export const Indicator = (props: {
   length: number;
   style?: StyleProp<ViewStyle>;
 }) => {
-  const beat = useStateSelector(x => x.clock.beat);
+  // const beat = useStateSelector(x => x.clock.beat);
+  const beat = 0;
   let pct;
   if (beat < 0) {
     pct = ((props.length + (beat % props.length)) * 100) / props.length;

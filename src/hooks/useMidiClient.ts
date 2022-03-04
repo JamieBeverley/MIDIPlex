@@ -1,6 +1,6 @@
 import {useEffect, useState} from 'react';
 import {PermissionsAndroid} from 'react-native';
-import {Device, BleManager} from 'react-native-ble-plx';
+import {Device, BleManager, Characteristic} from 'react-native-ble-plx';
 import {MidiClient} from '../midiClient';
 import {setMidiDevice, setMidiState} from '../store';
 
@@ -54,6 +54,33 @@ type UseMidiBleT = {
   client: MidiClient | null;
   device: Device | null;
 };
+
+export async function getTxCharacteristic(
+  deviceName: string,
+): Promise<Characteristic> {
+  await requestLocationPermission();
+  const device = await getDevice(deviceName);
+  const isConnected = await device.isConnected();
+  if (!isConnected) {
+    await device.connect();
+  }
+  await device.discoverAllServicesAndCharacteristics();
+  const services = await device.services();
+  const uartService = services.find(
+    service => service.uuid === '6e400001-b5a3-f393-e0a9-e50e24dcca9e',
+  );
+  if (!uartService) {
+    throw 'uart service not found';
+  }
+  const characteristics = await uartService.characteristics();
+  const txCharacteristic = characteristics.find(
+    x => x.uuid === '6e400002-b5a3-f393-e0a9-e50e24dcca9e',
+  );
+  if (txCharacteristic === undefined) {
+    throw 'Could not find characteristic';
+  }
+  return txCharacteristic;
+}
 
 export const useMidiBleClient = function (deviceName: string): UseMidiBleT {
   const [device, setStateDevice] = useState<Device | null>(null);

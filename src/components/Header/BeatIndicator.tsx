@@ -27,7 +27,8 @@ const styles = StyleSheet.create({
 });
 
 export const BeatIndicator = () => {
-  const beat = useStateSelector(x => x.clock.beat);
+  // const beat = useStateSelector(x => x.clock.beat);
+  const beat = 0;
 
   return (
     <View style={styles.beatIndicator}>

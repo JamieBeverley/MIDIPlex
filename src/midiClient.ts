@@ -28,7 +28,7 @@ export class MidiClient {
   playState(beat: number, rows: RowT[]) {
     rows.forEach(({note, cells}) => {
       if (cells[beat % cells.length].active) {
-        this.playNote(2, note, 100, 1);
+        this.playNote(2, note + 48, 100, 1);
       }
     });
   }

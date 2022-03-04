@@ -27,7 +27,7 @@ const App = () => {
   return (
     <Provider store={store}>
       <View style={style.container}>
-        <StatusBar backgroundColor={'#572780'} />
+        <StatusBar hidden />
         <Sequencer />
       </View>
     </Provider>

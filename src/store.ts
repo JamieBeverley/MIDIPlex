@@ -3,7 +3,6 @@ import {
   configureStore,
   PayloadAction,
   Middleware,
-  current,
 } from '@reduxjs/toolkit';
 import {Characteristic, Device} from 'react-native-ble-plx';
 import {clock, ClockT} from './Clock';
@@ -11,6 +10,7 @@ import {CellT, RowT, Sequencer} from './components/Sequencer/dataTypes';
 import {MidiClient} from './midiClient';
 import {repeatItem} from './util';
 import {ScaleName, Scales} from './scale';
+import {getTxCharacteristic} from './hooks/useMidiClient';
 
 type MIDIState =
   | 'dormant'
@@ -38,7 +38,7 @@ const initialScaleName: ScaleName = 'major';
 const initialSequencer: Sequencer = {
   rows: Scales[initialScaleName].map(note => ({
     note,
-    cells: repeatItem(false, Math.floor(Math.random() * 8) + 8).map(active => ({
+    cells: repeatItem(false, Math.floor(Math.random() * 0) + 8).map(active => ({
       active,
     })),
   })),
@@ -105,7 +105,6 @@ export const stateSlice = createSlice({
       if (state.sequencer.rows.length > rowIndex) {
         const currentLen = state.sequencer.rows[rowIndex].cells.length;
         if (currentLen < length) {
-          console.log(currentLen, length);
           state.sequencer.rows[rowIndex].cells = state.sequencer.rows[
             rowIndex
           ].cells.concat(repeatItem({active: false}, length - currentLen));
@@ -170,6 +169,7 @@ export const {
   setMidiDevice,
   setScale,
   setRowLength,
+  setCharacteristic,
 } = stateSlice.actions;
 
 // Middleware
@@ -181,6 +181,7 @@ const midiMiddleware: Middleware = store => next => action => {
       client = null;
     } else {
       client = new MidiClient(action.payload);
+      client.playNote(2, 60, 100, 2);
     }
   } else if (action.type === 'state/setBeat' && client !== null) {
     const state = store.getState();
@@ -203,3 +204,11 @@ clock.setBeatCallback(beat => {
   store.dispatch(setBeat(beat));
 });
 clock.init();
+
+getTxCharacteristic('MIDIPlex')
+  .then(characteristic => {
+    store.dispatch(setCharacteristic(characteristic || null));
+  })
+  .catch(e => {
+    console.warn(e);
+  });
